@@ -8,22 +8,22 @@ import backtype.storm.{Config, LocalCluster}
 
 object StormAppInMemory extends App {
 
-    val builder = new TopologyBuilder
+  val builder = new TopologyBuilder
 
-    builder.setSpout("generator", new RandomSentenceGeneratorSpout(), 1)
-    builder.setBolt("split", new SplitSentenceBolt(), 3).shuffleGrouping("generator")
-    builder.setBolt("count", new InMemoryWordCountBolt(), 3).fieldsGrouping("split", new Fields("word"))
+  builder.setSpout("generator", new RandomSentenceGeneratorSpout, 1)
+  builder.setBolt("split", new SplitSentenceBolt, 3).shuffleGrouping("generator")
+  builder.setBolt("count", new InMemoryWordCountBolt, 3).fieldsGrouping("split", new Fields("word"))
 
-    val topology: StormTopology = builder.createTopology()
+  val topology: StormTopology = builder.createTopology
 
-    val config = new Config
-    config.setDebug(true)
-    config.setMaxTaskParallelism(5)
+  val config = new Config
+  config.setDebug(true)
+  config.setMaxTaskParallelism(5)
 
-    val stormCluster = new LocalCluster
-    stormCluster.submitTopology("word-count", config, topology)
+  val stormCluster = new LocalCluster
+  stormCluster.submitTopology("word-count", config, topology)
 
-    Utils.sleep(10000)
+  Utils.sleep(10000)
 
-    stormCluster.shutdown()
+  stormCluster.shutdown()
 }

@@ -12,47 +12,45 @@ import com.hazelcast.core.{HazelcastInstance, IMap}
 
 class HazelcastWordCountBolt extends BaseRichBolt {
 
-    private var collector: OutputCollector = null
+  private var collector: OutputCollector = _
 
-    private var wordCount: IMap[String, Int] = null
+  private var wordCount: IMap[String, Int] = _
 
-    private var hazelcast: HazelcastInstance = null
+  private var hazelcast: HazelcastInstance = _
 
-    override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
-        this.collector = collector
-        hazelcast = HazelcastClient.newHazelcastClient(new ClientConfig())
-        wordCount = hazelcast.getMap[String, Int](stormConf.get("wordCountMap").asInstanceOf[String])
+  override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
+    this.collector = collector
+    hazelcast = HazelcastClient.newHazelcastClient(new ClientConfig())
+    wordCount = hazelcast.getMap[String, Int](stormConf.get("wordCountMap").asInstanceOf[String])
+  }
+
+  override def execute(input: Tuple) = {
+    val word = input.getStringByField("word")
+    val count = input.getIntegerByField("count")
+
+    wordCount.lock(word)
+
+    try {
+      val current = wordCount.get(word)
+
+      Option(current) match {
+        case Some(currentCount) => wordCount.put(word, currentCount + count)
+        case None => wordCount.put(word, count)
+      }
+    } finally {
+      wordCount.unlock(word)
     }
 
-    override def execute(input: Tuple) = {
-        val word = input.getStringByField("word")
-        val count = input.getIntegerByField("count")
+    collector.ack(input)
 
-        wordCount.lock(word)
+    println(wordCount)
+  }
 
-        try {
-            val current = wordCount.get(word)
+  override def declareOutputFields(declarer: OutputFieldsDeclarer) = {
+    // nothing
+  }
 
-            Option(current) match {
-                case Some(n) => wordCount.put(word, n + count)
-                case None => wordCount.put(word, count)
-            }
-        }
-
-        finally {
-            wordCount.unlock(word)
-        }
-
-        collector.ack(input)
-
-        println(wordCount)
-    }
-
-    override def declareOutputFields(declarer: OutputFieldsDeclarer) = {
-        // nothing
-    }
-
-    override def cleanup() = {
-        hazelcast.shutdown()
-    }
+  override def cleanup() = {
+    hazelcast.shutdown()
+  }
 }

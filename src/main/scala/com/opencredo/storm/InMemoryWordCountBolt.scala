@@ -11,29 +11,29 @@ import scala.collection.mutable
 
 class InMemoryWordCountBolt extends BaseRichBolt {
 
-    private var collector: OutputCollector = null
+  private var collector: OutputCollector = _
 
-    private val wordCount = mutable.Map[String, Int]()
+  private val wordCount = mutable.Map[String, Int]()
 
-    override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
-        this.collector = collector
+  override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
+    this.collector = collector
+  }
+
+  override def execute(input: Tuple) = {
+    val word = input.getStringByField("word")
+    val count = input.getIntegerByField("count")
+
+    wordCount.get(word) match {
+      case Some(currentCount) => wordCount.put(word, currentCount + count)
+      case None => wordCount.put(word, count)
     }
 
-    override def execute(input: Tuple) = {
-        val word = input.getStringByField("word")
-        val count = input.getIntegerByField("count")
+    collector.ack(input)
 
-        wordCount.get(word) match {
-            case Some(n) => wordCount(word) += count
-            case None => wordCount(word) = count
-        }
+    println(wordCount)
+  }
 
-        collector.ack(input)
-        
-        println(wordCount)
-    }
-
-    override def declareOutputFields(declarer: OutputFieldsDeclarer) = {
-        // nothing
-    }
+  override def declareOutputFields(declarer: OutputFieldsDeclarer) = {
+    // nothing
+  }
 }

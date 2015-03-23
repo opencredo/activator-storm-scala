@@ -5,8 +5,7 @@ import java.util
 import backtype.storm.task.{OutputCollector, TopologyContext}
 import backtype.storm.topology.OutputFieldsDeclarer
 import backtype.storm.topology.base.BaseRichBolt
-import backtype.storm.tuple.Tuple
-import com.opencredo.storm.utils.Fields
+import backtype.storm.tuple.{Fields, Tuple}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -32,6 +31,6 @@ class SplitSentenceBolt extends BaseRichBolt {
   }
 
   override def declareOutputFields(declarer: OutputFieldsDeclarer) {
-    declarer.declare(Fields("word", "count"))
+    declarer.declare(new Fields("word", "count"))
   }
 }

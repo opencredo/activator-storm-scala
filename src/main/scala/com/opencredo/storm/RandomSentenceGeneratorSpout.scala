@@ -4,8 +4,8 @@ import backtype.storm.spout.SpoutOutputCollector
 import backtype.storm.task.TopologyContext
 import backtype.storm.topology.OutputFieldsDeclarer
 import backtype.storm.topology.base.BaseRichSpout
+import backtype.storm.tuple.Fields
 import backtype.storm.utils.Utils
-import com.opencredo.storm.utils._
 
 import scala.collection.JavaConverters._
 import scala.util.Random
@@ -26,7 +26,7 @@ class RandomSentenceGeneratorSpout extends BaseRichSpout {
   }
 
   override def declareOutputFields(declarer: OutputFieldsDeclarer) {
-    declarer.declare(Fields("sentence"))
+    declarer.declare(new Fields("sentence"))
   }
 }
 

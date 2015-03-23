@@ -31,12 +31,13 @@ class HazelcastWordCountBolt extends BaseRichBolt {
     wordCount.lock(word)
 
     try {
-      val current = wordCount.get(word)
+      val current = Option(wordCount.get(word))
 
-      Option(current) match {
-        case Some(currentCount) => wordCount.put(word, currentCount + count)
+      current match {
+        case Some(n) => wordCount.put(word, n + count)
         case None => wordCount.put(word, count)
       }
+
     } finally {
       wordCount.unlock(word)
     }

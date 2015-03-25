@@ -9,8 +9,9 @@ import backtype.storm.tuple.Tuple
 import com.hazelcast.client.HazelcastClient
 import com.hazelcast.client.config.ClientConfig
 import com.hazelcast.core.{HazelcastInstance, IMap}
+import scala.collection.JavaConverters._
 
-class HazelcastWordCountBolt extends BaseRichBolt {
+class HazelcastWordCountBolt extends BaseRichBolt with WordCountLogging {
 
   private var collector: OutputCollector = _
 
@@ -20,7 +21,7 @@ class HazelcastWordCountBolt extends BaseRichBolt {
 
   override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
     this.collector = collector
-    hazelcast = HazelcastClient.newHazelcastClient(new ClientConfig())
+    hazelcast = HazelcastClient.newHazelcastClient(new ClientConfig)
     wordCount = hazelcast.getMap[String, Int](stormConf.get("wordCountMap").asInstanceOf[String])
   }
 
@@ -44,7 +45,7 @@ class HazelcastWordCountBolt extends BaseRichBolt {
 
     collector.ack(input)
 
-    println(wordCount)
+    logWordCount(wordCount.asScala)
   }
 
   override def declareOutputFields(declarer: OutputFieldsDeclarer) = {

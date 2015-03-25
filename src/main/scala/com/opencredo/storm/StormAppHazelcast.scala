@@ -9,7 +9,7 @@ import com.hazelcast.core.{Hazelcast, IMap}
 
 import scala.collection.JavaConverters._
 
-object StormAppHazelcast extends App {
+object StormAppHazelcast extends App with WordCountLogging {
 
   val hazelcastInstance = Hazelcast.newHazelcastInstance(new HazelcastConfig)
   val wordCount: IMap[String, Int] = hazelcastInstance.getMap[String, Int]("wordCount")
@@ -34,9 +34,7 @@ object StormAppHazelcast extends App {
 
   stormCluster.shutdown()
 
-  wordCount.asScala.foreach {
-    case (key, value) => println(s"$key : $value")
-  }
+  logWordCount(wordCount.asScala)
 
   hazelcastInstance.shutdown()
 }

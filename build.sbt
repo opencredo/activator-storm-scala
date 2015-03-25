@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
     "org.apache.storm" % "storm-core" % "0.9.3" % "provided" exclude("junit", "junit"),
     "com.hazelcast" % "hazelcast" % "3.4.1",
     "com.hazelcast" % "hazelcast-client" % "3.4.1",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test")
 
 fork in run := true

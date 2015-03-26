@@ -1,0 +1,28 @@
+<body>
+    <div>
+        <h2>Apache Storm, Hazelcast and Scala</h2>
+        <p>This tutorial is a Scala-based, realtime word-count example, using Apache Storm.
+            The purpose of this tutorial is to demonstrate how Scala can be used with ease to implement Storm components,
+            thanks to its easy to use Java-interoperability capabilities.</p>
+            <p>This tutorial contains two Storm topologies: one that uses in-memory maps and stateful dispatching to process and store
+                word counts, while the other uses Hazelcast as an in-memory data grid.
+        <h3>Apache Storm</h3>
+        <p>Apache Storm is distributed, scalable and fault-tolerant open source realtime computation system. Storm has a simple API to create
+            graphs of distributed components, called topologies.
+
+            <p>One of the core abstractions in Storm is the concept of a stream, which is an unbounded sequence of tuples.
+            Each stream starts with a component called a spout that is responsible of emitting data tuples into the stream.
+            The spout is typically combined with any number of bolts to process and transform the data.</p>
+            <p>In this tutorial, we have one stream where the <code>RandomSentenceGeneratorSpout</code> emits continuously random sentences from
+            a local set. Each sentence is split into individual words by the <code>SplitSentenceBolt</code> and then passed on
+            to either <code>HazelcastWordCountBolt</code> or <code>InMemoryWordCountBolt</code> for counting and persistence.</p>
+            <h3>Hazelcast</h3>
+            <p>Hazelcast is a scalable Java-based open source in-memory data grid. Hazelcast offers a number of distributed
+            data structures through a simple API that should be familiar to those who worked with Java collections.
+            </p>
+            <p>In this tutorial, we use a map from Hazelcast to store a counter for each word. Because Hazelcast is distributed,
+            there is no need to use field grouping in the storm topology; hence shuffle grouping is used. It is also worth noting
+            that Hazelcast survives shutdown of the Storm cluster, which allows us to examine the final results
+            at the end of <code>StormAppHazelcast</code> at after shutdown.</p>
+    </div>
+</body>

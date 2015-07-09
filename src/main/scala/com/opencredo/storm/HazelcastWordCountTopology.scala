@@ -9,16 +9,17 @@ import com.hazelcast.core.{Hazelcast, IMap}
 
 import scala.collection.JavaConverters._
 
-object StormAppHazelcast extends App with WordCountLogging {
+object HazelcastWordCountTopology extends App with WordCountLogging {
 
-  val hazelcastInstance = Hazelcast.newHazelcastInstance(new HazelcastConfig)
+  val hazelcastConfig = new HazelcastConfig
+  hazelcastConfig.getNetworkConfig.setPublicAddress("127.0.0.1:5701")
+  val hazelcastInstance = Hazelcast.newHazelcastInstance(hazelcastConfig)
   val wordCount: IMap[String, Int] = hazelcastInstance.getMap[String, Int]("wordCount")
 
   val builder = new TopologyBuilder
-
   builder.setSpout("generator", new RandomSentenceGeneratorSpout, 1)
-  builder.setBolt("split", new SplitSentenceBolt, 3).shuffleGrouping("generator")
-  builder.setBolt("count", new HazelcastWordCountBolt, 3).shuffleGrouping("split")
+  builder.setBolt("split", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
+  builder.setBolt("count", new HazelcastWordCounterBolt, 3).shuffleGrouping("split")
 
   val topology: StormTopology = builder.createTopology
 
@@ -26,6 +27,7 @@ object StormAppHazelcast extends App with WordCountLogging {
   config.setDebug(true)
   config.setMaxTaskParallelism(5)
   config.put("wordCountMap", "wordCount")
+  config.put("hazelcastAddress", "127.0.0.1:5701")
 
   val stormCluster = new LocalCluster
   stormCluster.submitTopology("word-count", config, topology)

@@ -9,7 +9,7 @@ import backtype.storm.tuple.Tuple
 
 import scala.collection.mutable
 
-class InMemoryWordCountBolt extends BaseRichBolt with WordCountLogging {
+class InMemoryWordCounterBolt extends BaseRichBolt with WordCountLogging {
 
   private var collector: OutputCollector = _
 
@@ -23,13 +23,8 @@ class InMemoryWordCountBolt extends BaseRichBolt with WordCountLogging {
     val word = input.getStringByField("word")
     val count = input.getIntegerByField("count")
 
-    wordCount.get(word) match {
-      case Some(currentCount) => wordCount.put(word, currentCount + count)
-      case None => wordCount.put(word, count)
-    }
-
+    wordCount.put(word, wordCount.getOrElse(word, 0) + count)
     collector.ack(input)
-
     logWordCount(wordCount)
   }
 
@@ -40,4 +35,6 @@ class InMemoryWordCountBolt extends BaseRichBolt with WordCountLogging {
   override def cleanup(): Unit = {
     logWordCount(wordCount)
   }
+
+  private[storm] def wordCountFor(word: String): Option[Int] = wordCount.get(word)
 }

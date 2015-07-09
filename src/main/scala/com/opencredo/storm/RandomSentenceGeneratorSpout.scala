@@ -12,16 +12,16 @@ import scala.util.Random
 
 class RandomSentenceGeneratorSpout extends BaseRichSpout {
 
+  import RandomSentenceGeneratorSpout._
+
   private var collector: SpoutOutputCollector = _
-  private val r = new Random
 
   override def open(conf: java.util.Map[_, _], context: TopologyContext, collector: SpoutOutputCollector): Unit = {
     this.collector = collector
   }
 
   override def nextTuple(): Unit = {
-    val s = RandomSentenceGeneratorSpout.randomSentences(r.nextInt(RandomSentenceGeneratorSpout.randomSentences.size))
-    collector.emit(List[AnyRef](s).asJava)
+    collector.emit(List[AnyRef](nextSentence).asJava)
     Utils.sleep(100)
   }
 
@@ -31,7 +31,10 @@ class RandomSentenceGeneratorSpout extends BaseRichSpout {
 }
 
 object RandomSentenceGeneratorSpout {
-  val randomSentences = List(
+
+  private val random = new Random
+
+  private[storm] val sentences = List(
     "Storm is a distributed realtime computation system.",
     "The logic for a realtime application is packaged into a Storm topology.",
     "The stream is the core abstraction in Storm.",
@@ -39,4 +42,6 @@ object RandomSentenceGeneratorSpout {
     "All processing in topologies is done in bolts.",
     "Bolts can do anything from filtering, functions, aggregations, joins, talking to databases, and more.",
     "Part of defining a topology is specifying for each bolt which streams it should receive as input.")
+
+  private def nextSentence: String = sentences(random.nextInt(sentences.size - 1))
 }

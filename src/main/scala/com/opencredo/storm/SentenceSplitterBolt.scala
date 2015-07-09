@@ -8,13 +8,10 @@ import backtype.storm.topology.base.BaseRichBolt
 import backtype.storm.tuple.{Fields, Tuple}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
-class SplitSentenceBolt extends BaseRichBolt {
+class SentenceSplitterBolt extends BaseRichBolt {
 
   private var collector: OutputCollector = _
-
-  private val wordCount = mutable.Map[String, Int]()
 
   override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
     this.collector = collector

@@ -11,18 +11,18 @@ import com.hazelcast.client.config.ClientConfig
 import com.hazelcast.core.{HazelcastInstance, IMap}
 import scala.collection.JavaConverters._
 
-class HazelcastWordCountBolt extends BaseRichBolt with WordCountLogging {
+class HazelcastWordCounterBolt extends BaseRichBolt with WordCountLogging {
 
   private var collector: OutputCollector = _
-
   private var wordCount: IMap[String, Int] = _
+  private var hazelcastClient: HazelcastInstance = _
 
-  private var hazelcast: HazelcastInstance = _
-
-  override def prepare(stormConf: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
+  override def prepare(config: util.Map[_, _], context: TopologyContext, collector: OutputCollector) = {
     this.collector = collector
-    hazelcast = HazelcastClient.newHazelcastClient(new ClientConfig)
-    wordCount = hazelcast.getMap[String, Int](stormConf.get("wordCountMap").asInstanceOf[String])
+    val clientConfig = new ClientConfig
+    clientConfig.getNetworkConfig.addAddress(config.get("hazelcastAddress").asInstanceOf[String])
+    hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig)
+    wordCount = hazelcastClient.getMap[String, Int](config.get("wordCountMap").asInstanceOf[String])
   }
 
   override def execute(input: Tuple) = {
@@ -30,21 +30,14 @@ class HazelcastWordCountBolt extends BaseRichBolt with WordCountLogging {
     val count = input.getIntegerByField("count")
 
     wordCount.lock(word)
-
     try {
-      val current = Option(wordCount.get(word))
-
-      current match {
-        case Some(n) => wordCount.put(word, n + count)
-        case None => wordCount.put(word, count)
-      }
-
+      val total = Option(wordCount.get(word))
+      wordCount.put(word, total.getOrElse(0) + count)
     } finally {
       wordCount.unlock(word)
     }
 
     collector.ack(input)
-
     logWordCount(wordCount.asScala)
   }
 
@@ -53,6 +46,6 @@ class HazelcastWordCountBolt extends BaseRichBolt with WordCountLogging {
   }
 
   override def cleanup() = {
-    hazelcast.shutdown()
+    hazelcastClient.shutdown()
   }
 }

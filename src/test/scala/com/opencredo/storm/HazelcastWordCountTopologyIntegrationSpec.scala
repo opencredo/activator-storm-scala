@@ -28,8 +28,8 @@ class HazelcastWordCountTopologyIntegrationSpec extends WordSpec with Matchers w
           override def run(cluster: ILocalCluster) {
             val builder = new TopologyBuilder
             builder.setSpout("generator", new RandomSentenceGeneratorSpout, 1)
-            builder.setBolt("split", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
-            builder.setBolt("count", new HazelcastWordCounterBolt, 3).shuffleGrouping("split")
+            builder.setBolt("splitter", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
+            builder.setBolt("counter", new HazelcastWordCounterBolt, 3).shuffleGrouping("splitter")
 
             val topology: StormTopology = builder.createTopology
 

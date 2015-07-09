@@ -43,7 +43,49 @@
     </div>
     <div>
         <h2>The anatomy of Storm topology</h2>
-        <p></p>
+        <h3>Data model</h3>
+        <p>Storm uses tuples as its data model. A tuple is a named list of values, and a field in a tuple can be an object of any type.
+            Out of the box, Storm supports all the primitive types, strings, and byte arrays as tuple field values.
+            To use an object of another type, you just need to implement a serializer for the type.</p>
+        <p>Every node in a topology must declare the output fields for the tuples it emits. Here is an example:</p>
+        <pre><code>override def declareOutputFields(declarer: OutputFieldsDeclarer) {
+    declarer.declare(new Fields("word", "count"))
+}</code></pre>
+        <h3>Spout</h3>
+        <p>Spout nodes in Storm topologies are responsible for emiting tuples into the topology.
+            Spouts typically integrate with external data sources, like persistence data stores, messaging systems or web services.
+            In this template we implemented a simple spout that sources data from a internal collection.</p>
+        <pre><code>override def nextTuple(): Unit = {
+    collector.emit(List[AnyRef](nextSentence).asJava)
+}</code></pre>
+        <h3>Bolt</h3>
+        <p>Bolt nodes in Storm topologies are responsible for processing the data received in tuples and either emitting tuples back into the topology
+            or outside of the topology, into persistent data store, messaging system, web service, etc. We use Hazelcast as an external data store in
+            <a href="#code/src/main/scala/com/opencredo/storm/HazelcastWordCounterBolt.scala">HazelcastWordCounterBolt</a>.</p>
+        <pre><code>override def execute(input: Tuple) = {
+    val word = input.getStringByField("word")
+    val count = input.getIntegerByField("count")
+
+    wordCount.lock(word)
+    try {
+        val total = Option(wordCount.get(word))
+        wordCount.put(word, total.getOrElse(0) + count)
+    } finally {
+        wordCount.unlock(word)
+    }
+
+    collector.ack(input)
+}</code></pre>
+        <h3>Topology</h3>
+        <p>Topologies are graphs of stream transformations that can be submitted for the execution to Storm clusters.</p>
+        <p><code>TopologyBuilder</code> can be used to compose a topology by adding spouts and bolts accompanied by the number of desired instances of these nodes
+        across the Storm cluster and the type of grouping to be used for distributing data tuples along topology graph edges.</p>
+        <pre><code>val builder = new TopologyBuilder
+            builder.setSpout("generator", new RandomSentenceGeneratorSpout, 1)
+            builder.setBolt("splitter", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
+            builder.setBolt("counter", new InMemoryWordCounterBolt, 3).fieldsGrouping("split", new Fields("word"))
+
+            val topology: StormTopology = builder.createTopology</code></pre>
     </div>
     <div>
         <h2>Word count topology</h2>

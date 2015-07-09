@@ -10,8 +10,8 @@ object InMemoryWordCountTopology extends App {
 
   val builder = new TopologyBuilder
   builder.setSpout("generator", new RandomSentenceGeneratorSpout, 1)
-  builder.setBolt("split", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
-  builder.setBolt("count", new InMemoryWordCounterBolt, 3).fieldsGrouping("split", new Fields("word"))
+  builder.setBolt("splitter", new SentenceSplitterBolt, 3).shuffleGrouping("generator")
+  builder.setBolt("counter", new InMemoryWordCounterBolt, 3).fieldsGrouping("splitter", new Fields("word"))
 
   val topology: StormTopology = builder.createTopology
 

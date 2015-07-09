@@ -8,9 +8,9 @@
         <h2>Overview</h2>
         <p>This template is a Scala-based, real-time word count example, using Apache Storm.
             We demonstrate how Scala can be used with ease to implement Storm components,
-            thanks to its easy to use Java interoperability capabilities.</p>
+            thanks to its convenience of interoperation with Java.</p>
         <p>This template contains two Storm topologies: one that uses in-memory maps and stateful dispatching to process and store
-            word counts, while the other uses Hazelcast as an in-memory data grid.</p>
+            word counts, and one that uses Hazelcast as an in-memory data grid.</p>
     </div>
     <div>
         <h2>Apache Storm</h2>
@@ -49,11 +49,11 @@
         <h2>Word count topology</h2>
         <p>In this template, we demonstrate how to implement a <a href="https://en.wikipedia.org/wiki/Word_count">word count</a>
             functionality using Storm's distributed computation capabilities.</p>
-        <p>Counting words requires the source of text. <a href="#code/src/main/scala/com/opencredo/storm/RandomSentenceGeneratorSpout.scala">RandomSentenceGeneratorSpout</a>
+        <p>Counting words requires a source of text. <a href="#code/src/main/scala/com/opencredo/storm/RandomSentenceGeneratorSpout.scala">RandomSentenceGeneratorSpout</a>
             is a spout that emits a continuous stream of sentences being randomly picked from the predefined list.</p>
-        <p>The next in the processing flow is splitting sentences into words. This is accomplished by <a href="#code/src/main/scala/com/opencredo/storm/SentenceSplitterBolt.scala">SentenceSplitterBolt</a>
+        <p>The next stage in the processing flow is splitting sentences into words. This is accomplished by <a href="#code/src/main/scala/com/opencredo/storm/SentenceSplitterBolt.scala">SentenceSplitterBolt</a>
             that splits sentences into words and emits tuples consisting of the word and the count of one (used for further aggregation).
-            Tasks in Storm are executed in parallel so we need to tell storm how tuples should be routed between multiple nodes.
+            Tasks in Storm are executed in parallel, so we need to tell storm how tuples should be routed between multiple nodes.
             In case of <code>SentenceSplitterBolt</code> we can use the shuffle grouping that will distribute sentence tuples evenly between all splitter tasks.</p>
         <p>The last step of the topology involves counting all the word tuples.
             <a href="#code/src/main/scala/com/opencredo/storm/InMemoryWordCounterBolt.scala">InMemoryWordCounterBolt</a> uses a <code>mutable.Map</code> to count words.
@@ -66,41 +66,41 @@
     </div>
     <div>
         <h2>Word count topology with Hazelcast</h2>
-        <p>In the basic implementation of the word counting topology we use <code>mutable.Map</code> to store word counts in
+        <p>In the basic implementation of the word-counting topology we use a <code>mutable.Map</code> to store word counts in
             <a href="#code/src/main/scala/com/opencredo/storm/InMemoryWordCounterBolt.scala">InMemoryWordCounterBolt</a>,
-            which combines with field grouping allows to effectively count words across a number of bolt instances.
+            which combined with field grouping allows to effectively count words across a number of bolt instances.
             The downside of this approach is that word counts are stored in memory across multiple <code>mutable.Map</code>s
             and there is no easy way to collate them as the topology processes the stream of sentences.</p>
         <p>Apache Storm usually utilises external persistent stores or messaging solutions to push the outcome of stream processing to.
-            In this template we use Hazelcast as a distributed in-memory cache to keep word counts outside of Storm topology.
+            In this template we use Hazelcast as a distributed in-memory cache to keep word counts outside of the Storm topology.
             <a href="#code/src/main/scala/com/opencredo/storm/HazelcastWordCounterBolt.scala">HazelcastWordCounterBolt</a>
             connects to the Hazelcast cluster and uses a distributed map to store word counts, which also means that we can use shuffle grouping.
             This map can be interrogated after the topology has been stopped to retrieve the final counts for all the words.</p>
         <p>This is exactly what <a href="#code/src/main/scala/com/opencredo/storm/HazelcastWordCountTopology.scala">HazelcastWordCountTopology</a>
-            does so if you <a href="#run">run</a> the application using this main class you will get total word counts in the console output,
+            does, so if you <a href="#run">run</a> the application using this main class you will get the total word counts in the console output,
             even after the Storm cluster has been terminated.</p>
     </div>
     <div>
         <h2>Testing Storm topologies</h2>
-        <p>Testing distributed computation systems is not an easy task given the complexity such systems usually involve.
-            Storm is not an exception in that regard but likely provides some facilities that help testing topologies in a controlled environment.</p>
-        <p>Before we discuss testing topologies it definitely helps to verify the behaviour of their building blocks, spouts and bolts.
-            This template includes <a href="#code/src/test/scala/com/opencredo/storm/RandomSentenceGeneratorSpoutSpec.scala">RandomSentenceGeneratorSpoutSpec</a>
-            that exercises the spout generating random sentences as well as <a href="#code/src/test/scala/com/opencredo/storm/SentenceSplitterBoltSpec.scala">SentenceSplitterBoltSpec</a>
+        <p>Testing distributed computation systems is not an easy task, given the complexity such systems usually involve.
+            Storm is not an exception in that regard, but luckily provides some facilities that help testing topologies in a controlled environment.</p>
+        <p>Before we discuss testing topologies, it definitely helps to verify the behaviour of their building blocks, spouts and bolts.
+            This template includes a <a href="#code/src/test/scala/com/opencredo/storm/RandomSentenceGeneratorSpoutSpec.scala">RandomSentenceGeneratorSpoutSpec</a>
+            that exercises the spout generating random sentences, as well as <a href="#code/src/test/scala/com/opencredo/storm/SentenceSplitterBoltSpec.scala">SentenceSplitterBoltSpec</a>
             that tests the bolt responsible for splitting sentences into words. We are using <a href="http://www.scalatest.org/">ScalaTest's</a> <code>WordSpec</code> to make sure test cases
             are sufficiently descriptive and well structured. <a href="https://code.google.com/p/mockito/">Mockito</a> is used for mocking dependencies in unit tests.</p>
-        <p>When it come to testing word counting bolts we have to consider two variants and apply appropriate testing approach to both of them.
+        <p>When it come to testing word-counting bolts, we have to consider two variants and apply appropriate testing approach to both of them.
             <a href="#code/src/test/scala/com/opencredo/storm/InMemoryWordCounterBoltSpec.scala">InMemoryWordCounterBoltSpec</a>
-            tests the in-memory version of the bolt and asserts word counts stored in <code>mutable.Map</code> internal to the bolt class.
+            tests the in-memory version of the bolt, and asserts that word counts are stored in <code>mutable.Map</code> internal to the bolt class.
             In <a href="#code/src/test/scala/com/opencredo/storm/HazelcastWordCounterBoltSpec.scala">HazelcastWordCounterBoltSpec</a>
             we need to take a different approach as the bolt communicates to the Hazelcast cluster over TCP and mocking out
             any dependencies outside of the Storm API is not possible due to the distributed nature of Storm (only serializable
-            config properties can be used). The test creates a Hazelcast cluster and passes connection details to the bolt using Storm
-            configuration mechanism. Hazelcast is then used to assert whether word counts that bolt stores in the distributed map are correct.</p>
+            config properties can be used). The test creates a Hazelcast cluster and passes connection details to the bolt using the Storm
+            configuration mechanism. Hazelcast is then used to assert that the word counts that the bolt stores in the distributed map are correct.</p>
         <p>With unit tests we can exercise spouts and bolts in isolation (or with minimal dependencies) but this alone won't give
             us full confidence that when all nodes are put together and working in parallel (as they do in Storm) the entire topology will behave
             as expected. <a href="#code/src/test/scala/com/opencredo/storm/HazelcastWordCountTopologyIntegrationSpec.scala">HazelcastWordCountTopologyIntegrationSpec</a>
-            uses Storms testing framework to run topology in a controlled environment and with the ability to inject test data as opposed to using
+            uses Storm's testing framework to run topology in a controlled environment and with the ability to inject test data as opposed to using
             our sentence generating spout. In this test we start a Hazelcast cluster again and validate the word counts after the topology has
             completed processing all the tuples injected by the framework.</p>
     </div>

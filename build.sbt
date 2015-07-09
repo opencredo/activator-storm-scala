@@ -15,9 +15,11 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-core" % "1.9.5" % "test"
 )
 
-fork in (Test, run) := true
+fork in Test := true
+
+// Topology integration test takes more time that the default 5 seconds timeout
+envVars ++= Map("STORM_TEST_TIMEOUT_MS" -> "60000")
 
 parallelExecution in Test := false
-
 
 fork in run := true
